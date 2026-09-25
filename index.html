@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Watch It, Read It: Find Your Next Book (Copy)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F0FA; --surface:#FFFFFF; --ink:#1F1A3D; --muted:#5B5578;
+  --stage:#231C4F; --bulb:#FFC93C; --pick:#FFE08A; --pickline:#E0A100;
+  --red:#D6334F; --teal:#127A87; --line:#D9D4EE;
+  --display:"Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", Verdana, system-ui, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#15122B; --surface:#211D40; --ink:#F2F0FA; --muted:#B9B3D6;
+    --stage:#0E0B22; --pick:#4A3B0C; --pickline:#FFC93C;
+    --red:#FF7A90; --teal:#5CC8D4; --line:#3A3463;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15122B; --surface:#211D40; --ink:#F2F0FA; --muted:#B9B3D6;
+  --stage:#0E0B22; --pick:#4A3B0C; --pickline:#FFC93C;
+  --red:#FF7A90; --teal:#5CC8D4; --line:#3A3463;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:1.125rem;line-height:1.55}
+.wrap{max-width:1040px;margin:0 auto;padding:1.25rem}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
+
+/* Marquee header: the one loud thing on the page */
+.marquee{
+  background:var(--stage);color:#FFF;border-radius:18px;padding:2rem 1.5rem 1.75rem;
+  position:relative;text-align:center;margin-top:.5rem;
+  border:10px solid transparent;
+  background-image:linear-gradient(var(--stage),var(--stage)),
+    radial-gradient(circle,var(--bulb) 0 35%,transparent 42%);
+  background-origin:border-box;background-clip:padding-box,border-box;
+  background-size:auto,20px 20px;
+}
+.marquee h1{font-family:var(--display);font-weight:800;font-size:clamp(2.2rem,7vw,4.2rem);line-height:1;margin:0;color:var(--bulb);letter-spacing:-.02em}
+.marquee h1 span{display:block;color:#FFF;font-size:.55em;letter-spacing:0;margin-top:.35rem}
+.marquee p{max-width:34em;margin:1rem auto 0;font-size:1.15rem;color:#E6E2FF}
+
+h2{font-family:var(--display);font-weight:800;font-size:1.6rem;margin:2.25rem 0 .25rem;line-height:1.15}
+.hint{margin:0 0 1rem;color:var(--muted)}
+
+/* Genre tiles */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.75rem}
+.tile{
+  text-align:left;background:var(--surface);border:2px solid var(--line);border-radius:14px;
+  padding:.9rem 1rem;display:grid;grid-template-columns:auto 1fr;gap:.1rem .75rem;align-items:center;min-height:88px;
+}
+.tile .emo{font-size:2rem;grid-row:span 2;line-height:1}
+.tile b{font-size:1.15rem}
+.tile small{color:var(--muted);font-size:.9rem;line-height:1.3}
+.tile[aria-pressed="true"]{background:var(--pick);border-color:var(--pickline);box-shadow:inset 0 0 0 2px var(--pickline)}
+.tile[aria-pressed="true"] b::after{content:"  ✓";color:var(--ink)}
+
+/* Book type choice */
+.types{display:flex;flex-wrap:wrap;gap:.6rem}
+.type{background:var(--surface);border:2px solid var(--line);border-radius:999px;padding:.55rem 1.1rem;font-weight:700}
+.type[aria-checked="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+.actions{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:1.75rem}
+.go{background:var(--red);color:#FFF;border:0;border-radius:12px;padding:.9rem 1.6rem;font-weight:700;font-size:1.2rem}
+.alt{background:transparent;border:2px solid var(--ink);border-radius:12px;padding:.8rem 1.3rem;font-weight:700;font-size:1.1rem}
+.clear{background:none;border:0;text-decoration:underline;color:var(--muted);padding:.8rem .5rem}
+
+.msg{margin-top:1rem;font-weight:700;color:var(--red);min-height:1.5em}
+
+/* Results */
+#results{margin-top:1rem}
+.count{font-family:var(--display);font-weight:800;font-size:1.4rem;margin:1.5rem 0 1rem}
+.books{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1rem}
+.book{background:var(--surface);border:2px solid var(--line);border-radius:16px;padding:1.2rem 1.2rem 1rem;display:flex;flex-direction:column;gap:.55rem}
+.book.spot{border-color:var(--pickline);box-shadow:0 0 0 4px var(--pick)}
+.top{display:flex;gap:1rem;align-items:flex-start}
+.top > div{flex:1;min-width:0;display:flex;flex-direction:column;gap:.4rem}
+.cover{
+  flex:0 0 92px;height:136px;border-radius:3px 10px 10px 3px;color:#FFF;
+  display:flex;flex-direction:column;justify-content:space-between;padding:.55rem .5rem .55rem .8rem;
+  box-shadow:inset 7px 0 0 rgba(0,0,0,.25), 2px 3px 0 rgba(0,0,0,.18);
+  font-family:var(--display);font-weight:800;font-size:.78rem;line-height:1.1;overflow:hidden;
+}
+.cover .ce{font-size:2rem;line-height:1}
+.cover .ct{display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;text-shadow:0 1px 2px rgba(0,0,0,.35)}
+.book h3{font-family:var(--display);font-weight:800;font-size:1.35rem;line-height:1.15;margin:0}
+.by{margin:0;color:var(--muted)}
+.badges{display:flex;flex-wrap:wrap;gap:.4rem}
+.badge{font-size:.85rem;font-weight:700;border-radius:6px;padding:.15rem .5rem;border:1.5px solid var(--line)}
+.badge.quick{border-color:var(--teal);color:var(--teal)}
+.badge.heavy{border-color:var(--muted);color:var(--muted)}
+.hook{margin:0}
+.liked{margin:0;font-size:.95rem;border-left:4px solid var(--bulb);padding-left:.65rem}
+.liked b{display:block}
+.save{margin-top:auto;align-self:flex-start;background:transparent;border:2px solid var(--line);border-radius:10px;padding:.45rem .9rem;font-weight:700}
+.save[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+
+/* Saved list */
+.saved{background:var(--surface);border:2px dashed var(--line);border-radius:16px;padding:1rem 1.2rem;margin-top:.5rem}
+.saved ol{margin:.25rem 0 0;padding-left:1.4rem}
+.saved li{margin:.3rem 0}
+.saved .empty{color:var(--muted);margin:0}
+footer{color:var(--muted);font-size:.95rem;margin:2.5rem 0 1rem}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="marquee">
+    <h1>Watch it. Read it.<span>Find a book that feels like your favorite show.</span></h1>
+    <p>Pick the kinds of movies and shows you like. You'll get books that match.</p>
+  </header>
+
+  <main>
+    <h2>1. What do you like to watch?</h2>
+    <p class="hint">Tap as many as you want.</p>
+    <div class="tiles" id="tiles"></div>
+
+    <h2>2. What kind of book do you want?</h2>
+    <p class="hint">Pick one.</p>
+    <div class="types" id="types" role="radiogroup" aria-label="Kind of book"></div>
+
+    <div class="actions">
+      <button class="go" id="find">Show my books</button>
+      <button class="alt" id="surprise">Surprise me</button>
+      <button class="clear" id="reset">Start over</button>
+    </div>
+    <p class="msg" id="msg" role="status" aria-live="polite"></p>
+
+    <section id="results" aria-live="polite"></section>
+
+    <h2>My reading list</h2>
+    <p class="hint">Tap "Save" on any book to add it here.</p>
+    <div class="saved" id="saved"></div>
+  </main>
+
+  <footer>Can't decide? Pick the book whose first line makes you want to know what happens next. Ask your teacher or school librarian to help you find a copy.</footer>
+</div>
+
+<script>
+const GENRES = [
+  {id:"horror", name:"Horror & scary", emo:"👻", ex:"Stranger Things, Wednesday, Goosebumps"},
+  {id:"mystery", name:"Mystery & crime", emo:"🔍", ex:"Knives Out, Only Murders in the Building"},
+  {id:"action", name:"Action & superheroes", emo:"🦸", ex:"Marvel, Spider-Verse, Mission: Impossible"},
+  {id:"scifi", name:"Sci-fi & future worlds", emo:"🚀", ex:"Star Wars, The Hunger Games, Black Mirror"},
+  {id:"fantasy", name:"Fantasy & magic", emo:"🐉", ex:"Harry Potter, Percy Jackson, Avatar: The Last Airbender"},
+  {id:"romance", name:"Romance & rom-coms", emo:"💘", ex:"The Summer I Turned Pretty, To All the Boys"},
+  {id:"comedy", name:"Comedy", emo:"😂", ex:"Abbott Elementary, Never Have I Ever, The Office"},
+  {id:"sports", name:"Sports", emo:"🏀", ex:"Ted Lasso, Creed, Remember the Titans"},
+  {id:"reallife", name:"Real-life drama", emo:"🎭", ex:"All American, This Is Us, Wonder"},
+  {id:"anime", name:"Anime", emo:"🍥", ex:"My Hero Academia, Spy x Family, Naruto"},
+  {id:"truestory", name:"True stories & documentaries", emo:"📰", ex:"Hidden Figures, true crime docs"},
+  {id:"survival", name:"Survival & adventure", emo:"🏕️", ex:"Survivor, Alone, The Maze Runner"}
+];
+
+const COVER = {
+  horror:"linear-gradient(160deg,#4B3A78,#1E1638)", mystery:"linear-gradient(160deg,#23667A,#12303B)",
+  action:"linear-gradient(160deg,#D8413A,#8E1F24)", scifi:"linear-gradient(160deg,#3057B8,#172A5E)",
+  fantasy:"linear-gradient(160deg,#8A4FC7,#4A2478)", romance:"linear-gradient(160deg,#E4578A,#A42B5B)",
+  comedy:"linear-gradient(160deg,#E9A31B,#B06B08)", sports:"linear-gradient(160deg,#EB7431,#A8461A)",
+  reallife:"linear-gradient(160deg,#36916A,#1B5A3F)", anime:"linear-gradient(160deg,#E0508C,#6D3FB8)",
+  truestory:"linear-gradient(160deg,#6E6A80,#3A3748)", survival:"linear-gradient(160deg,#5E8F2E,#2F5418)"
+};
+
+const TYPES = [
+  {id:"all", name:"Any kind"},
+  {id:"quick", name:"Quick reads"},
+  {id:"visual", name:"Graphic novels & manga"},
+  {id:"verse", name:"Novels in verse (poems)"}
+];
+
+// q = quick read (short, visual, or fast-moving); h = heavy topics
+const BOOKS = [
+  {t:"Coraline", m:true, a:"Neil Gaiman", f:"Novel", q:true, g:["horror","fantasy"], like:"Wednesday, Coraline (movie), Stranger Things", hook:"Coraline finds a door to a better version of her home. The Other Mother wants her to stay. Forever."},
+  {t:"Anya's Ghost", a:"Vera Brosgol", f:"Graphic novel", q:true, g:["horror","reallife"], like:"Wednesday, Ghosts, Goosebumps", hook:"Anya falls down a well and makes a new friend: a ghost. At first the ghost helps her. Then it gets jealous."},
+  {t:"Dread Nation", a:"Justina Ireland", f:"Novel", q:false, g:["horror","action"], like:"The Walking Dead, The Last of Us", hook:"After the Civil War, the dead rise. Jane is trained to fight them, and she uncovers a secret plan much scarier than zombies."},
+  {t:"Scary Stories to Tell in the Dark", m:true, a:"Alvin Schwartz", f:"Short stories", q:true, g:["horror"], like:"Goosebumps, Are You Afraid of the Dark?, campfire stories", hook:"Short, creepy stories. Each one takes about five minutes to read, and some have a jump-scare ending."},
+
+  {t:"One of Us Is Lying", a:"Karen M. McManus", f:"Novel", q:false, g:["mystery","reallife"], like:"Pretty Little Liars, Riverdale, The Breakfast Club", hook:"Five students walk into detention. Only four walk out alive. Every one of them has a secret."},
+  {t:"A Good Girl's Guide to Murder", a:"Holly Jackson", f:"Novel", q:false, g:["mystery"], like:"Only Murders in the Building, true crime podcasts", hook:"Pip picks a closed murder case for her school project. Someone in town wants her to stop digging."},
+  {t:"The Inheritance Games", a:"Jennifer Lynn Barnes", f:"Novel", q:false, g:["mystery","romance"], like:"Knives Out, National Treasure", hook:"A billionaire Avery has never met leaves her his fortune. His family wants to know why. So does she."},
+  {t:"Chasing Lincoln's Killer", a:"James L. Swanson", f:"True story", q:false, g:["mystery","truestory"], like:"Manhunt shows, true crime docs", hook:"The 12-day hunt for the man who shot President Lincoln, told like a thriller. Every word of it really happened."},
+
+  {t:"Miles Morales: Spider-Man", a:"Jason Reynolds", f:"Novel", q:false, g:["action","reallife"], like:"Into the Spider-Verse, Across the Spider-Verse", hook:"Miles is trying to be a normal kid in Brooklyn. His spider-sense keeps telling him something is wrong at his school."},
+  {t:"Ms. Marvel, Vol. 1: No Normal", a:"G. Willow Wilson", f:"Graphic novel", q:true, g:["action","comedy"], like:"Ms. Marvel, The Marvels", hook:"Kamala Khan is a regular teen in Jersey City. Then one night she can suddenly change her shape and size."},
+  {t:"Stormbreaker (Alex Rider)", m:true, a:"Anthony Horowitz", f:"Novel", q:true, g:["action","mystery"], like:"James Bond, Mission: Impossible, Alex Rider (TV)", hook:"Alex is 14 when he finds out his uncle was a spy. Now the secret service wants Alex to finish the mission."},
+  {t:"Steelheart", a:"Brandon Sanderson", f:"Novel", q:false, g:["action","scifi"], like:"The Incredibles, X-Men, The Boys", hook:"People with superpowers took over, and they are all villains. David wants revenge on the one who killed his dad."},
+  {t:"Renegades", a:"Marissa Meyer", f:"Novel", q:false, g:["action","romance"], like:"The Umbrella Academy, X-Men", hook:"Nova is a villain spying on a team of superheroes. Then she starts to like one of them."},
+
+  {t:"The Hunger Games", a:"Suzanne Collins", f:"Novel", q:false, g:["scifi","action","survival"], like:"The Hunger Games movies, Divergent, Squid Game", hook:"In a future America, kids are forced to fight on live TV. Katniss volunteers to save her little sister."},
+  {t:"Scythe", a:"Neal Shusterman", f:"Novel", q:false, g:["scifi"], like:"Black Mirror, The Good Place", hook:"In the future nobody dies, unless a Scythe chooses them. Two teens are forced to train as Scythes."},
+  {t:"Cinder", a:"Marissa Meyer", f:"Novel", q:false, g:["scifi","romance","fantasy"], like:"Star Wars, Cinderella, Star Trek", hook:"Cinderella is a cyborg mechanic in future Beijing. Then the prince shows up with a broken robot."},
+  {t:"The Maze Runner", a:"James Dashner", f:"Novel", q:false, g:["scifi","survival"], like:"The Maze Runner movies, Lost", hook:"Thomas wakes up in a giant maze with no memory. The only way out is through it."},
+  {t:"Mech Cadet Yu, Vol. 1", a:"Greg Pak", f:"Graphic novel", q:true, g:["scifi","action","anime"], like:"Pacific Rim, Transformers, Gundam", hook:"Stanford cleans the floors at a pilot academy. Then a giant alien robot picks him to be its pilot."},
+
+  {t:"The Lightning Thief", m:true, a:"Rick Riordan", f:"Novel", q:false, g:["fantasy","action","comedy"], like:"Percy Jackson (Disney+), Harry Potter", hook:"Percy finds out his dad is a Greek god. Now he's accused of stealing Zeus's lightning bolt."},
+  {t:"Nimona", a:"ND Stevenson", f:"Graphic novel", q:true, g:["fantasy","comedy","action"], like:"Nimona (Netflix), Shrek, She-Ra", hook:"A shapeshifter teams up with a villain knight. Turns out the heroes might be the real bad guys."},
+  {t:"Children of Blood and Bone", a:"Tomi Adeyemi", f:"Novel", q:false, g:["fantasy","action"], like:"Black Panther, Avatar: The Last Airbender", hook:"Magic was stolen from Zélie's people. She has one chance to bring it back before it's gone for good."},
+  {t:"Six of Crows", a:"Leigh Bardugo", f:"Novel", q:false, g:["fantasy","action","mystery"], like:"Shadow and Bone, Ocean's Eleven", hook:"Six outcasts. One impossible heist. Nobody trusts anybody."},
+  {t:"Amulet, Book 1: The Stonekeeper", m:true, a:"Kazu Kibuishi", f:"Graphic novel", q:true, g:["fantasy","anime","survival"], like:"Studio Ghibli movies, Avatar: The Last Airbender", hook:"Emily and her brother follow their mom into a world of robots, monsters, and talking animals."},
+
+  {t:"To All the Boys I've Loved Before", a:"Jenny Han", f:"Novel", q:false, g:["romance","comedy"], like:"To All the Boys (Netflix), XO, Kitty", hook:"Lara Jean wrote secret love letters and never sent them. Then someone mails every one."},
+  {t:"The Summer I Turned Pretty", a:"Jenny Han", f:"Novel", q:false, g:["romance","reallife"], like:"The Summer I Turned Pretty (Prime Video)", hook:"Every summer Belly goes to the same beach house with the same two brothers. This summer, everything changes."},
+  {t:"Heartstopper, Vol. 1", a:"Alice Oseman", f:"Graphic novel", q:true, g:["romance","reallife"], like:"Heartstopper (Netflix)", hook:"Charlie and Nick get assigned seats next to each other. A friendship turns into something more."},
+  {t:"The Sun Is Also a Star", a:"Nicola Yoon", f:"Novel", q:false, g:["romance","reallife"], like:"Everything, Everything, rom-com movies", hook:"Natasha's family is being deported tomorrow. Daniel meets her today. They have one day."},
+  {t:"Frankly in Love", a:"David Yoon", f:"Novel", q:false, g:["romance","comedy"], like:"Never Have I Ever, XO, Kitty", hook:"Frank's parents want him to date a Korean girl. So he and his friend Joy fake a relationship."},
+
+  {t:"American Born Chinese", a:"Gene Luen Yang", f:"Graphic novel", q:true, g:["comedy","fantasy","reallife"], like:"American Born Chinese (Disney+), Kung Fu Panda", hook:"A new kid at school, a Monkey King, and a very embarrassing cousin. Three stories that crash together."},
+  {t:"New Kid", m:true, a:"Jerry Craft", f:"Graphic novel", q:true, g:["comedy","reallife"], like:"Abbott Elementary, Everybody Hates Chris", hook:"Jordan wants to go to art school. His parents send him to a fancy private school where he's one of the only Black kids."},
+  {t:"Dumplin'", a:"Julie Murphy", f:"Novel", q:false, g:["comedy","romance"], like:"Dumplin' (Netflix), Miss Congeniality", hook:"Willowdean enters her mom's beauty pageant just to prove a point."},
+  {t:"The Hitchhiker's Guide to the Galaxy", a:"Douglas Adams", f:"Novel", q:false, g:["comedy","scifi"], like:"Guardians of the Galaxy, Doctor Who", hook:"Earth gets destroyed to make room for a space highway. Arthur escapes in his bathrobe."},
+
+  {t:"The Crossover", m:true, a:"Kwame Alexander", f:"Novel in verse", q:true, g:["sports","reallife"], like:"The Crossover (Disney+), NBA highlights", hook:"Twin brothers, basketball, and a family that is changing fast. Told in poems that move like a game."},
+  {t:"Ghost", m:true, a:"Jason Reynolds", f:"Novel", q:true, g:["sports","reallife"], like:"Creed, Remember the Titans", hook:"Ghost has been running his whole life, from trouble and from his past. Now he's running for a track team."},
+  {t:"Booked", m:true, a:"Kwame Alexander", f:"Novel in verse", q:true, g:["sports","reallife"], like:"Ted Lasso, soccer on TV", hook:"Nick lives for soccer. His dad lives for vocabulary words. Then his parents split up."},
+  {t:"Dairy Queen", a:"Catherine Gilbert Murdock", f:"Novel", q:false, g:["sports","comedy","romance"], like:"Friday Night Lights, Remember the Titans", hook:"D.J. gets stuck training the rival school's quarterback. Then she decides to try out for football herself."},
+
+  {t:"Monster", a:"Walter Dean Myers", f:"Written like a movie script", q:true, h:true, g:["reallife","mystery"], like:"Monster (Netflix), Law & Order", hook:"Steve is 16 and on trial for murder. He tells his story as if it were a movie."},
+  {t:"Long Way Down", a:"Jason Reynolds", f:"Novel in verse", q:true, h:true, g:["reallife"], like:"All American", hook:"Will's brother was shot. Will has a gun and a 60-second elevator ride to decide what to do."},
+  {t:"The Hate U Give", a:"Angie Thomas", f:"Novel", q:false, h:true, g:["reallife"], like:"The Hate U Give (movie), All American", hook:"Starr is the only witness when police shoot her friend. What she says next could change everything."},
+  {t:"Wonder", m:true, a:"R.J. Palacio", f:"Novel", q:true, g:["reallife"], like:"Wonder (movie), This Is Us", hook:"Auggie goes to a real school for the first time. Not everyone there is ready for him."},
+  {t:"Out of My Mind", m:true, a:"Sharon M. Draper", f:"Novel", q:true, g:["reallife"], like:"Out of My Mind (Disney+), Wonder, Atypical", hook:"Melody is the smartest kid in her school. Nobody knows, because she can't speak."},
+
+  {t:"My Hero Academia, Vol. 1", a:"Kohei Horikoshi", f:"Manga", q:true, g:["anime","action"], like:"My Hero Academia, Marvel movies", hook:"Almost everyone in Izuku's world has a superpower. He was born without one, and he still wants to be a hero."},
+  {t:"Spy x Family, Vol. 1", a:"Tatsuya Endo", f:"Manga", q:true, g:["anime","comedy","action"], like:"Spy x Family, Mr. & Mrs. Smith", hook:"A spy, an assassin, and a kid who can read minds pretend to be a normal family. None of them know each other's secrets."},
+  {t:"Fullmetal Alchemist, Vol. 1", a:"Hiromu Arakawa", f:"Manga", q:true, g:["anime","fantasy","action"], like:"Fullmetal Alchemist: Brotherhood, Naruto", hook:"Two brothers use alchemy to try to bring their mom back to life. It costs them more than they imagined."},
+  {t:"Tokyo Ever After", a:"Emiko Jean", f:"Novel", q:false, g:["anime","romance","comedy"], like:"The Princess Diaries, anime romance, K-dramas", hook:"Izumi is a regular girl in California. Then she finds out her dad is the Crown Prince of Japan."},
+
+  {t:"Hidden Figures (Young Readers' Edition)", m:true, a:"Margot Lee Shetterly", f:"True story", q:false, g:["truestory"], like:"Hidden Figures (movie), space documentaries", hook:"The Black women mathematicians who did the math that got NASA astronauts into space."},
+  {t:"I Am Malala (Young Readers Edition)", m:true, a:"Malala Yousafzai", f:"True story", q:false, g:["truestory","reallife"], like:"Documentaries, news stories", hook:"She spoke up for girls' right to go to school. She was attacked for it. She kept speaking."},
+  {t:"The Boy Who Harnessed the Wind (Young Readers Edition)", m:true, a:"William Kamkwamba", f:"True story", q:false, g:["truestory","survival"], like:"The Boy Who Harnessed the Wind (Netflix)", hook:"During a famine in Malawi, 14-year-old William builds a windmill out of junkyard parts to save his village."},
+  {t:"March: Book One", a:"John Lewis, Andrew Aydin, Nate Powell", f:"Graphic novel", q:true, g:["truestory","reallife"], like:"Selma, history documentaries", hook:"Congressman John Lewis tells how he fought for civil rights as a young man, in comic form."},
+  {t:"Unbroken (Young Adult Adaptation)", a:"Laura Hillenbrand", f:"True story", q:false, g:["truestory","survival","sports"], like:"Unbroken (movie), war movies", hook:"An Olympic runner's plane crashes in the ocean during World War II. Surviving the crash was only the beginning."},
+
+  {t:"Hatchet", m:true, a:"Gary Paulsen", f:"Novel", q:true, g:["survival"], like:"Alone, Survivor, Cast Away", hook:"Brian's plane crashes in the Canadian wilderness. All he has is a hatchet."},
+  {t:"Alone", m:true, a:"Megan E. Freeman", f:"Novel in verse", q:true, g:["survival"], like:"Alone, Home Alone", hook:"Maddie wakes up and everyone in her town is gone. She is 12, and she is completely on her own."},
+  {t:"Refugee", m:true, a:"Alan Gratz", f:"Novel", q:false, h:true, g:["survival","reallife"], like:"War movies, documentaries", hook:"Three kids, in three different times and places, escape their homes. Their stories connect in the end."},
+  {t:"Ashfall", a:"Mike Mullin", f:"Novel", q:false, g:["survival","scifi"], like:"2012, disaster movies", hook:"A supervolcano erupts. Alex walks across a destroyed Midwest to find his family."},
+  // Middle school reading level additions (m = easier reading level)
+  {t:"Small Spaces", a:"Katherine Arden", f:"Novel", q:true, m:true, g:["horror","mystery"], like:"Stranger Things, Goosebumps", hook:"On a school trip, Ollie's bus breaks down near a field of scarecrows. The driver gives one warning: avoid large places at night."},
+  {t:"Took", a:"Mary Downing Hahn", f:"Novel", q:true, m:true, g:["horror"], like:"Are You Afraid of the Dark?, ghost stories", hook:"Locals say Old Auntie takes a girl from the woods every 50 years. Now Daniel's little sister is missing."},
+  {t:"Doll Bones", a:"Holly Black", f:"Novel", q:true, m:true, g:["horror","survival"], like:"Annabelle, Goosebumps", hook:"A creepy old doll may hold the ghost of a girl. She wants three friends to take her home to be buried."},
+  {t:"The Westing Game", a:"Ellen Raskin", f:"Novel", q:true, m:true, g:["mystery","comedy"], like:"Knives Out, Clue", hook:"Sixteen people are named in a millionaire's will. Whoever figures out who killed him wins the fortune."},
+  {t:"Holes", a:"Louis Sachar", f:"Novel", q:true, m:true, g:["mystery","survival","comedy"], like:"Holes (movie), adventure movies", hook:"Stanley is sent to a desert camp where boys dig holes all day. The warden is looking for something."},
+  {t:"City Spies", a:"James Ponti", f:"Novel", q:true, m:true, g:["action","mystery"], like:"Mission: Impossible, Spy Kids, Alex Rider", hook:"Sara is a foster kid who hacks into a computer system. Instead of getting in trouble, she gets recruited as a spy."},
+  {t:"Miles Morales: Shock Waves", a:"Justin A. Reynolds", f:"Graphic novel", q:true, m:true, g:["action"], like:"Into the Spider-Verse, Marvel", hook:"Miles is juggling school, a fundraiser for Puerto Rico, and a new mystery that leads to a powerful company."},
+  {t:"The Wild Robot", a:"Peter Brown", f:"Novel", q:true, m:true, g:["scifi","survival"], like:"The Wild Robot (movie), WALL-E", hook:"A robot washes up on a wild island. To survive, she has to learn from the animals who fear her."},
+  {t:"The Last Cuentista", a:"Donna Barba Higuera", f:"Novel", q:true, m:true, g:["scifi","survival"], like:"Interstellar, Star Wars", hook:"Earth is ending. Petra wakes up hundreds of years later on a new planet, and she's the only one who still remembers Earth."},
+  {t:"The City of Ember", a:"Jeanne DuPrau", f:"Novel", q:true, m:true, g:["scifi","mystery","survival"], like:"City of Ember (movie), The Maze Runner", hook:"Ember is an underground city, and its lights keep going out. Lina and Doon find clues to a way out."},
+  {t:"Tristan Strong Punches a Hole in the Sky", a:"Kwame Mbalia", f:"Novel", q:true, m:true, g:["fantasy","action"], like:"Percy Jackson, Black Panther", hook:"Tristan punches a tree and rips open a world of Black American folk heroes and African gods. Now he has to fix it."},
+  {t:"Aru Shah and the End of Time", a:"Roshani Chokshi", f:"Novel", q:true, m:true, g:["fantasy","comedy"], like:"Percy Jackson, Ms. Marvel", hook:"Aru lies to her classmates and lights a cursed lamp. Now an ancient demon is awake, and it's her job to stop it."},
+  {t:"Bone: Out from Boneville", a:"Jeff Smith", f:"Graphic novel", q:true, m:true, g:["fantasy","comedy"], like:"Shrek, The Lord of the Rings", hook:"Three cousins get run out of their town and lost in a valley full of dragons and rat creatures."},
+  {t:"Stargirl", a:"Jerry Spinelli", f:"Novel", q:true, m:true, g:["romance","reallife"], like:"Stargirl (Disney+), rom-coms", hook:"The new girl at Mica High doesn't care what anyone thinks. Leo can't stop thinking about her."},
+  {t:"Flipped", a:"Wendelin Van Draanen", f:"Novel", q:true, m:true, g:["romance","comedy"], like:"Flipped (movie), To All the Boys", hook:"Juli has liked Bryce since second grade. Bryce has avoided her since second grade. Then things flip."},
+  {t:"Drama", a:"Raina Telgemeier", f:"Graphic novel", q:true, m:true, g:["romance","comedy","reallife"], like:"High School Musical, Glee", hook:"Callie builds sets for the school play. The drama backstage is bigger than the drama onstage."},
+  {t:"Class Act", a:"Jerry Craft", f:"Graphic novel", q:true, m:true, g:["comedy","reallife"], like:"Abbott Elementary, Everybody Hates Chris", hook:"Drew feels like he has to work twice as hard as everyone else at his private school just to get noticed."},
+  {t:"Smile", a:"Raina Telgemeier", f:"Graphic novel", q:true, m:true, g:["comedy","reallife"], like:"Never Have I Ever, Inside Out", hook:"Raina trips and knocks out her front teeth. What follows: braces, surgery, and figuring out who her real friends are."},
+  {t:"Rebound", a:"Kwame Alexander", f:"Novel in verse", q:true, m:true, g:["sports","reallife"], like:"The Crossover (Disney+), basketball movies", hook:"After his dad dies, Charlie gets sent to his grandparents' for the summer. Basketball might save him."},
+  {t:"Patina", a:"Jason Reynolds", f:"Novel", q:true, m:true, g:["sports","reallife"], like:"Creed, track and field", hook:"Patty runs like she has something to prove. On and off the track, she's carrying a lot."},
+  {t:"Heat", a:"Mike Lupica", f:"Novel", q:true, m:true, g:["sports","reallife"], like:"Little League World Series, baseball movies", hook:"Michael is the best 12-year-old pitcher in the Bronx. But he's hiding a big secret about his family."},
+  {t:"Ghost Boys", a:"Jewell Parker Rhodes", f:"Novel", q:true, m:true, h:true, g:["reallife"], like:"The Hate U Give, All American", hook:"Jerome, 12, is shot by a police officer who thought his toy gun was real. As a ghost, he watches what happens next."},
+  {t:"Restart", a:"Gordon Korman", f:"Novel", q:true, m:true, g:["reallife","comedy"], like:"Wonder, Cobra Kai", hook:"Chase falls off a roof and forgets everything, including that he was the biggest bully in school."},
+  {t:"Fish in a Tree", a:"Lynda Mullaly Hunt", f:"Novel", q:true, m:true, g:["reallife"], like:"Wonder, Abbott Elementary", hook:"Ally is really good at hiding that reading is hard for her. Then a new teacher notices."},
+  {t:"El Deafo", a:"Cece Bell", f:"Graphic novel", q:true, m:true, g:["reallife","comedy","truestory"], like:"Wonder, superhero movies", hook:"Cece loses her hearing and has to wear a huge hearing aid to school. It gives her a secret superpower."},
+  {t:"Front Desk", a:"Kelly Yang", f:"Novel", q:true, m:true, g:["reallife","comedy"], like:"Fresh Off the Boat, Abbott Elementary", hook:"Mia's family runs a motel, and Mia runs the front desk. She's 10, and she's not letting anyone push her family around."},
+  {t:"One Piece, Vol. 1", a:"Eiichiro Oda", f:"Manga", q:true, m:true, g:["anime","action","comedy"], like:"One Piece (Netflix), Naruto", hook:"Luffy's body stretches like rubber. His goal: find the greatest treasure in the world and become King of the Pirates."},
+  {t:"Witch Hat Atelier, Vol. 1", a:"Kamome Shirahama", f:"Manga", q:true, m:true, g:["anime","fantasy"], like:"Studio Ghibli movies, Frieren", hook:"Coco has always wanted to do magic. When she finally tries it, something goes terribly wrong."},
+  {t:"Bomb", a:"Steve Sheinkin", f:"True story", q:false, m:true, g:["truestory","mystery"], like:"Oppenheimer, spy movies", hook:"Scientists race to build the atomic bomb while spies race to steal it. All true."},
+  {t:"Undefeated", a:"Steve Sheinkin", f:"True story", q:false, m:true, g:["truestory","sports"], like:"Remember the Titans, sports documentaries", hook:"Jim Thorpe and a Native American school team took on the best college football teams in America, and won."},
+  {t:"Brown Girl Dreaming", a:"Jacqueline Woodson", f:"Novel in verse", q:true, m:true, g:["truestory","reallife"], like:"Documentaries, This Is Us", hook:"The author tells her own childhood story, growing up between South Carolina and Brooklyn, in short poems."},
+  {t:"A Long Walk to Water", a:"Linda Sue Park", f:"Novel", q:true, m:true, g:["survival","truestory"], like:"Survival documentaries, The Boy Who Harnessed the Wind", hook:"Two kids in Sudan, years apart. One walks to escape war. One walks every day for water. Based on a true story."},
+  {t:"Ground Zero", a:"Alan Gratz", f:"Novel", q:true, m:true, h:true, g:["survival","reallife"], like:"Disaster movies, war movies", hook:"Brandon is trapped in the World Trade Center on 9/11. Years later, Reshmina lives through the war in Afghanistan."}
+
+];
+
+const state = {picked:new Set(), type:"all", saved:[]};
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+try { const raw = localStorage.getItem("watchread-saved"); if (raw) state.saved = JSON.parse(raw) || []; } catch(e) { state.saved = []; }
+function persist(){ try { localStorage.setItem("watchread-saved", JSON.stringify(state.saved)); } catch(e) {} }
+
+function drawTiles(){
+  $("#tiles").innerHTML = GENRES.map(g =>
+    `<button class="tile" data-id="${g.id}" aria-pressed="${state.picked.has(g.id)}">
+      <span class="emo" aria-hidden="true">${g.emo}</span><b>${g.name}</b><small>${esc(g.ex)}</small>
+    </button>`).join("");
+}
+function drawTypes(){
+  $("#types").innerHTML = TYPES.map(t =>
+    `<button class="type" role="radio" data-id="${t.id}" aria-checked="${state.type===t.id}">${t.name}</button>`).join("");
+}
+function fitsType(b){
+  if (state.type === "quick") return b.q;
+  if (state.type === "visual") return b.f === "Graphic novel" || b.f === "Manga";
+  if (state.type === "verse") return b.f === "Novel in verse";
+  return true;
+}
+function matches(){
+  return BOOKS
+    .map(b => ({b, n:b.g.filter(g => state.picked.has(g)).length}))
+    .filter(x => x.n > 0 && fitsType(x.b))
+    .sort((x,y) => y.n - x.n || ((y.b.m?1:0) - (x.b.m?1:0)) || ((y.b.q?1:0) - (x.b.q?1:0)));
+}
+function card(b, spot){
+  const isSaved = state.saved.includes(b.t);
+  const badges = [`<span class="badge">${esc(b.f)}</span>`];
+  if (b.q) badges.push(`<span class="badge quick">Quick read</span>`);
+  if (b.h) badges.push(`<span class="badge heavy">Heavy topics</span>`);
+  const g = GENRES.find(x => x.id === b.g[0]);
+  return `<article class="book${spot?" spot":""}">
+    <div class="top">
+      <div class="cover" style="background:${COVER[b.g[0]]}" aria-hidden="true">
+        <span class="ce">${g.emo}</span><span class="ct">${esc(b.t)}</span>
+      </div>
+      <div>
+        <h3>${esc(b.t)}</h3>
+        <p class="by">by ${esc(b.a)}</p>
+        <div class="badges">${badges.join("")}</div>
+      </div>
+    </div>
+    <p class="hook">${esc(b.hook)}</p>
+    <p class="liked"><b>Try it if you liked:</b>${esc(b.like)}</p>
+    <button class="save" data-t="${esc(b.t)}" aria-pressed="${isSaved}">${isSaved ? "Saved ✓" : "Save"}</button>
+  </article>`;
+}
+function typeName(){ return TYPES.find(t => t.id === state.type).name.toLowerCase(); }
+
+function showResults(){
+  const msg = $("#msg"), out = $("#results");
+  if (!state.picked.size){ msg.textContent = "Pick at least one kind of movie or show first."; out.innerHTML = ""; return; }
+  const list = matches();
+  msg.textContent = "";
+  if (!list.length){
+    out.innerHTML = `<p class="count">No ${esc(typeName())} match those picks yet.</p><p>Try "Any kind" in step 2, or tap another kind of show in step 1.</p>`;
+  } else {
+    out.innerHTML = `<p class="count">${list.length} book${list.length>1?"s":""} for you</p>
+      <p class="hint">Books at the top match the most of your picks.</p>
+      <div class="books">${list.map(x => card(x.b)).join("")}</div>`;
+  }
+  out.scrollIntoView();
+}
+function surprise(){
+  let pool = state.picked.size ? matches().map(x => x.b) : BOOKS.filter(fitsType);
+  if (!pool.length) pool = BOOKS;
+  const b = pool[Math.floor(Math.random()*pool.length)];
+  $("#msg").textContent = "";
+  $("#results").innerHTML = `<p class="count">Your surprise book</p>
+    <div class="books">${card(b, true)}</div>
+    <div class="actions"><button class="alt" id="again">Surprise me again</button></div>`;
+  $("#results").scrollIntoView();
+}
+function drawSaved(){
+  const box = $("#saved");
+  if (!state.saved.length){ box.innerHTML = `<p class="empty">Nothing saved yet.</p>`; return; }
+  box.innerHTML = `<ol>${state.saved.map(t => {
+    const b = BOOKS.find(x => x.t === t);
+    return b ? `<li><b>${esc(b.t)}</b> by ${esc(b.a)} <button class="clear" data-remove="${esc(t)}">Remove</button></li>` : "";
+  }).join("")}</ol>`;
+}
+function toggleSave(t){
+  const i = state.saved.indexOf(t);
+  if (i >= 0) state.saved.splice(i,1); else state.saved.push(t);
+  persist(); drawSaved();
+  document.querySelectorAll(".save").forEach(btn => {
+    if (btn.dataset.t === t){ const on = state.saved.includes(t); btn.setAttribute("aria-pressed", on); btn.textContent = on ? "Saved ✓" : "Save"; }
+  });
+}
+
+document.addEventListener("click", e => {
+  const tile = e.target.closest(".tile");
+  if (tile){ const id = tile.dataset.id; state.picked.has(id) ? state.picked.delete(id) : state.picked.add(id); tile.setAttribute("aria-pressed", state.picked.has(id)); $("#msg").textContent = ""; return; }
+  const type = e.target.closest(".type");
+  if (type){ state.type = type.dataset.id; drawTypes(); return; }
+  const save = e.target.closest(".save");
+  if (save){ toggleSave(save.dataset.t); return; }
+  const rm = e.target.closest("[data-remove]");
+  if (rm){ toggleSave(rm.dataset.remove); return; }
+  if (e.target.closest("#again")){ surprise(); return; }
+});
+$("#find").addEventListener("click", showResults);
+$("#surprise").addEventListener("click", surprise);
+$("#reset").addEventListener("click", () => {
+  state.picked.clear(); state.type = "all"; drawTiles(); drawTypes();
+  $("#results").innerHTML = ""; $("#msg").textContent = ""; window.scrollTo(0,0);
+});
+
+drawTiles(); drawTypes(); drawSaved();
+</script>
+</body>
+</html>
